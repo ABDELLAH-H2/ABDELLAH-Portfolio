@@ -78,12 +78,15 @@ const About = () => {
             </div>
 
             {/* Download CV Button */}
-            <button className={`bg-[#e63946] hover:bg-[#cf2a3b] text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 text-lg relative group // Add relative and group for hover glow
-              ${inView ? 'animate-button-scale' : 'opacity-0 scale-80'}`}>
+            <a
+              href="/White%20and%20Blue%20Lines%20Minimalist%20Professional%20CV%20Resume.pdf"
+              download
+              className={`bg-[#e63946] hover:bg-[#cf2a3b] text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 text-lg relative group ${inView ? 'animate-button-scale' : 'opacity-0 scale-80'}`}
+            >
               Download CV
               {/* Glow effect on hover */}
               <span className="absolute inset-0 bg-[#e63946] rounded-lg opacity-0 group-hover:opacity-100 group-hover:animate-button-glow-hover -z-10 transition-opacity duration-300"></span>
-            </button>
+            </a>
           </div>
         </div>
       </div>
