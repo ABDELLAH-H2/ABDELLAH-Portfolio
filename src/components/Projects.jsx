@@ -6,7 +6,7 @@ import pr1 from '../assets/pr1.png';
 import pr2 from '../assets/pr2.png';
 const projects = [
   {
-    title: "Project Alpha",
+    title: "Marrakech Shoes",
     description: "An e-commerce website built using WordPress and WooCommerce, with customized CSS modifications.",
     technologies: ["WordPress", "css"],
     image: pr1, // Updated to use imported asset
