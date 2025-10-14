@@ -51,7 +51,7 @@ const About = () => {
             </p>
 
             <p className="mb-8 text-gray-300">
-            I’m a  Web Development, currently learning to build dynamic and responsive websites using modern technologies.
+            I’m a  Web Development , currently  building dynamic and responsive websites using modern technologies.
             Through the OFPPT / ISTA NTIC SYBA, I’m developing strong skills in backend & WordPress development.
             I have hands-on experience with WordPress, WooCommerce, and custom projects using HTML, CSS, and Laravel, allowing me to design and develop complete, functional web solutions.
             I aim to combine clean design, efficient code, and strong functionality to create high-quality web applications.
