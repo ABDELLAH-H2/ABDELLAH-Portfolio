@@ -1,142 +1,156 @@
-// src/components/Projects.jsx
-import React from 'react';
-import { useInView } from 'react-intersection-observer';
-import { motion } from 'framer-motion'; // Import motion for advanced animations
+import React, { useRef, useEffect } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Import original project images
 import pr1 from '../assets/pr1.png';
-import pr2 from '../assets/pr2.png';
-const projects = [
-  {
-    title: "Marrakech Shoes",
-    description: "An e-commerce website built using WordPress and WooCommerce, with customized CSS modifications.",
-    technologies: ["WordPress", "css"],
-    image: pr1, // Updated to use imported asset
-    liveLink: "https://marrakechshoes.com/",
-    githubLink: "#",
-  },
-  // 'Project Beta' and 'OFPPT Final Project' entries removed
-];
+// import pr2 from '../assets/pr2.png'; // Keeping commented as per previous state if needed, or just using what was there
 
-const Projects = () => {
-  // Use a ref for the entire section to trigger animations
-  const { ref: sectionRef, inView: sectionInView } = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
+gsap.registerPlugin(ScrollTrigger);
 
-  return (
-    <section id="projects" className="scroll-mt-24 py-20 bg-[#121212] text-white" ref={sectionRef}>
-      <div className="container mx-auto px-4">
-        <h2 className={`text-4xl font-bold text-center text-white mb-12 font-heading ${sectionInView ? 'animate-fade-in-up' : 'opacity-0'}`}>
-          <span className="text-[#e63946]">My</span> Projects
-        </h2>
-        {/* Only one project: center it, else use grid */}
-        <div className={
-          projects.length === 1
-            ? "flex justify-center"
-            : "grid md:grid-cols-2 lg:grid-cols-3 gap-8"
-        }>
-          {projects.map((project, index) => (
-            <ProjectCard key={index} project={project} index={index} sectionInView={sectionInView} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
+const ProjectCard = ({ project, index }) => {
+  const cardRef = useRef(null);
+  const imageRef = useRef(null);
 
-// Separate ProjectCard component for better organization and animation control
-const ProjectCard = ({ project, index, sectionInView }) => {
-  // Use a ref for each individual card to trigger its specific animation
-  const { ref: cardRef, inView: cardInView } = useInView({
-    triggerOnce: true,
-    threshold: 0.2, // Trigger when 20% of the card is in view
-  });
+  const handleMouseMove = (e) => {
+    const { left, top, width, height } = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - left - width / 2) / 25; // Reduced sensitivity
+    const y = (e.clientY - top - height / 2) / 25;
 
-  // Framer Motion variants for the slide-up and fade-in
-  const cardVariants = {
-    hidden: { y: 50, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        damping: 15,
-        stiffness: 100,
-        duration: 0.5,
-        delay: index * 0.15, // Staggered delay for each card
-      },
-    },
+    gsap.to(cardRef.current, {
+      rotationY: x,
+      rotationX: -y,
+      transformPerspective: 1000,
+      ease: "power2.out",
+      duration: 0.5
+    });
   };
 
-  // Framer Motion variants for the curtain reveal
-  const curtainVariants = {
-    hidden: { y: "0%" }, // Start fully covering
-    visible: {
-      y: "-100%", // Slide up to reveal
-      transition: {
-        delay: index * 0.15 + 0.3, // Delay after card appears
-        duration: 0.8,
-        ease: [0.76, 0, 0.24, 1], // Custom ease for a smooth reveal
-      },
-    },
+  const handleMouseLeave = () => {
+    gsap.to(cardRef.current, {
+      rotationY: 0,
+      rotationX: 0,
+      ease: "power2.out",
+      duration: 0.5
+    });
   };
 
   return (
-    <motion.div
+    <div 
       ref={cardRef}
-      className="relative bg-[#0f0f0f] rounded-lg shadow-lg overflow-hidden border border-white/5"
-      variants={cardVariants}
-      initial="hidden"
-      animate={cardInView && sectionInView ? "visible" : "hidden"} // Only animate if both section and card are in view
-      whileHover={{
-        scale: 1.05,
-        boxShadow: "0 0 20px rgba(230, 57, 70, 0.7)", // Glowing red shadow
-        transition: { duration: 0.3, ease: "easeOut" },
-      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative group bg-[#111] rounded-2xl overflow-hidden border border-gray-800 hover:border-[#ff0055] transition-all duration-500 shadow-lg"
+      style={{ transformStyle: 'preserve-3d' }}
     >
-      <div className="relative w-full h-48 overflow-hidden">
-        <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
-        {/* Curtain Reveal Overlay */}
-        <motion.div
-          className="absolute inset-0 bg-[#0f0f0f]" // Dark overlay
-          variants={curtainVariants}
-          initial="hidden"
-          animate={cardInView && sectionInView ? "visible" : "hidden"}
+      {/* Image Container */}
+      <div className="relative h-56 overflow-hidden">
+        <div className="absolute inset-0 bg-[#ff0055]/10 group-hover:bg-transparent transition-colors duration-300 z-10" />
+        <img 
+          ref={imageRef}
+          src={project.image} 
+          alt={project.title} 
+          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
         />
       </div>
 
-      <div className="p-6">
-        <h3 className="text-2xl font-bold mb-2 text-white">{project.title}</h3>
-        <p className="text-[#b3b3b3] mb-4">{project.description}</p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {project.technologies.map((tech, techIndex) => (
-            <span key={techIndex} className="bg-[#e63946]/10 text-[#e63946] text-sm px-3 py-1 rounded-full">
-              {tech}
+      {/* Content */}
+      <div className="p-8 relative z-20 bg-[#111] transform translate-z-10">
+        <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-[#ff0055] transition-colors duration-300">
+          {project.title}
+        </h3>
+        <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+          {project.description}
+        </p>
+        
+        <div className="flex flex-wrap gap-2 mb-8">
+          {project.technologies.map((tag, i) => (
+            <span key={i} className="text-xs font-mono px-3 py-1 rounded-full bg-gray-900 text-gray-300 border border-gray-800 group-hover:border-[#ff0055]/30 transition-colors">
+              {tag}
             </span>
           ))}
         </div>
-        <div className="flex justify-between">
-          <motion.a
-            href={project.liveLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-[#e63946] hover:bg-[#ff4d5a] text-white px-4 py-2 rounded-md transition duration-300 relative overflow-hidden"
-            whileHover={{
-              animation: "pulse-once 1s ease-in-out forwards", // Apply pulsing animation on hover
-            }}
-            // You'll need to define the keyframes for pulse-once in your CSS
-          >
+
+        <div className="flex gap-4">
+          <a href={project.liveLink} target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-3 rounded-xl bg-[#ff0055] text-white font-bold hover:bg-[#d9004c] transition-all duration-300 transform hover:translate-y-[-2px] shadow-lg hover:shadow-[#ff0055]/20">
             Live Demo
-          </motion.a>
-          {/* Render GitHub button only if githubLink exists and is non-empty */}
+          </a>
+          {/* Only show GitHub if link is valid/present */}
           {project.githubLink && project.githubLink !== "#" && (
-            <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="border border-[#e63946] text-[#e63946] hover:bg-[#ff4d5a] hover:border-[#ff4d5a] hover:text-white px-4 py-2 rounded-md transition duration-300">
+             <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="flex-1 text-center py-3 rounded-xl border border-gray-700 text-white hover:bg-gray-800 transition-all duration-300">
               GitHub
             </a>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
+  );
+};
+
+const Projects = () => {
+  const sectionRef = useRef(null);
+  const titleRef = useRef(null);
+
+  // Restored original projects data
+  const projects = [
+    {
+      title: "Marrakech Shoes",
+      description: "An e-commerce website built using WordPress and WooCommerce, with customized CSS modifications.",
+      technologies: ["WordPress", "CSS"],
+      image: pr1,
+      liveLink: "https://marrakechshoes.com/",
+      githubLink: "#",
+    },
+    // Add more projects here as needed
+  ];
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(titleRef.current, {
+        scrollTrigger: {
+          trigger: titleRef.current,
+          start: "top 85%",
+          toggleActions: "play none none reverse",
+        },
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      });
+
+      gsap.from(".project-card-wrapper", {
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          toggleActions: "play none none reverse",
+        },
+        y: 100,
+        opacity: 0,
+        stagger: 0.2,
+        duration: 0.8,
+        ease: "power3.out"
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section id="projects" ref={sectionRef} className="py-20 px-4 relative z-10">
+      <div className="max-w-6xl mx-auto">
+        <h2 ref={titleRef} className="text-4xl md:text-5xl font-bold text-center text-white mb-16">
+          My <span className="text-[#ff0055]">Projects</span>
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+          {projects.map((project, index) => (
+            <div key={index} className="project-card-wrapper">
+              <ProjectCard project={project} index={index} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 };
 

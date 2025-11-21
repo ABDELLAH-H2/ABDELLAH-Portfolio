@@ -1,118 +1,99 @@
-// src/components/Hero.jsx
-import React, { useState, useEffect } from 'react';
-import { useInView } from 'react-intersection-observer';
-import backgroundImage from '../assets/sky.jpg'; // Keep your background image import
+import React, { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
 
 const Hero = () => {
-  // Split the text to apply different colors
-  const staticPrefix = "Hi, I'm ";
-  const dynamicName = "Abdellah Alioua";
-  const textToType = staticPrefix + dynamicName;
-
-  const [displayedText, setDisplayedText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [index, setIndex] = useState(0); // Current character index
-  const typingSpeed = 70; // milliseconds per character
-  const erasingSpeed = 50; // milliseconds per character
-  const pauseTime = 2000; // 2 seconds pause after typing
-  const loopDelay = 1000; // Delay before starting new loop
-
-  // Use useInView to trigger the animation when the component is visible
-  const { ref, inView } = useInView({
-    triggerOnce: true,
-    threshold: 0.5,
-  });
+  const titleRef = useRef(null);
+  const taglineRef = useRef(null);
+  const buttonRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    if (!inView) return; // Only run effect when component is in view
+    const ctx = gsap.context(() => {
+      // Title Animation
+      gsap.fromTo(titleRef.current, 
+        { y: 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.5 }
+      );
 
-    let typer;
+      // Tagline Glitch/Typewriter Effect
+      const taglineText = taglineRef.current.innerText;
+      const chars = taglineText.split('');
+      taglineRef.current.innerText = '';
+      
+      chars.forEach((char, i) => {
+        const span = document.createElement('span');
+        span.innerText = char;
+        span.style.opacity = 0;
+        taglineRef.current.appendChild(span);
+        
+        gsap.to(span, {
+          opacity: 1,
+          duration: 0.1,
+          delay: 1.5 + i * 0.05,
+          ease: "none"
+        });
+      });
 
-    const handleTyping = () => {
-      setDisplayedText(textToType.substring(0, index));
+      // Button Animation
+      gsap.fromTo(buttonRef.current,
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.7)", delay: 2.5 }
+      );
 
-      if (!isDeleting && index < textToType.length) {
-        // Typing
-        typer = setTimeout(() => setIndex(prev => prev + 1), typingSpeed);
-      } else if (isDeleting && index > 0) {
-        // Erasing
-        typer = setTimeout(() => setIndex(prev => prev - 1), erasingSpeed);
-      } else if (!isDeleting && index === textToType.length) {
-        // Paused after typing, start erasing
-        typer = setTimeout(() => setIsDeleting(true), pauseTime);
-      } else if (isDeleting && index === 0) {
-        // Erased, reset for next loop
-        setIsDeleting(false);
-        typer = setTimeout(() => setIndex(0), loopDelay); // Short delay before starting next type
-      }
-    };
+      // Mouse movement parallax for the container
+      const handleMouseMove = (e) => {
+        const { clientX, clientY } = e;
+        const x = (clientX / window.innerWidth - 0.5) * 20;
+        const y = (clientY / window.innerHeight - 0.5) * 20;
+        
+        gsap.to(containerRef.current, {
+          x: x,
+          y: y,
+          duration: 1,
+          ease: "power2.out"
+        });
+      };
 
-    handleTyping();
+      window.addEventListener('mousemove', handleMouseMove);
+      return () => window.removeEventListener('mousemove', handleMouseMove);
 
-    return () => clearTimeout(typer); // Cleanup timeout on unmount or re-render
-  }, [index, isDeleting, inView, textToType]); // Dependencies
+    }, containerRef);
 
-  // Determine the color of each part of the displayed text
-  const renderTypingText = () => {
-    const prefixLength = staticPrefix.length;
-    let rendered = [];
-
-    for (let i = 0; i < displayedText.length; i++) {
-      if (i < prefixLength) {
-        // "Hi, I'm " part - Red glow
-        rendered.push(
-          <span key={i} className="text-red-400" style={{ textShadow: '0 0 5px #ff2b2b, 0 0 10px #ff2b2b' }}>
-            {displayedText[i]}
-          </span>
-        );
-      } else {
-        // "Abdellah Alioua" part - White glow
-        rendered.push(
-          <span key={i} className="text-white" style={{ textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff' }}>
-            {displayedText[i]}
-          </span>
-        );
-      }
-    }
-    return rendered;
-  };
-
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section id="hero" className="relative overflow-hidden min-h-screen flex items-center justify-center bg-[#0b0b0b] text-white pt-16">
-      {/* Background Image - kept from your previous version */}
-      <div
-        className="pointer-events-none absolute inset-0 w-full h-full object-cover z-0"
-        style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-      ></div>
+    <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* 3D Lighting Effect Behind Title - Simulated with CSS/Glow for performance/simplicity integration */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-600/20 rounded-full blur-[100px] -z-10 animate-pulse" />
 
-      {/* Existing Overlay - ensure it's above the image but below text */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/70 z-10" />
-
-
-      <div ref={ref} className="relative z-20 text-center p-8 animate-slide-in-up">
-        {/* Typing text */}
-        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-white font-heading">
-          <span className="font-mono text-4xl md:text-6xl">
-            {renderTypingText()}
-          </span>
-          {/* Blinking Cursor - changed to a more neutral white glow */}
-          <span className="inline-block w-2 h-10 md:h-16 ml-1 bg-white align-middle animate-blink"
-                style={{ textShadow: '0 0 5px #ffffff, 0 0 10px #ffffff' }}>
-            &nbsp;
-          </span>
+      <div ref={containerRef} className="text-center z-10 px-4">
+        <h1 ref={titleRef} className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
+          Hi, I'm <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff0055] to-[#ff5555] drop-shadow-[0_0_10px_rgba(255,0,85,0.5)]">Abdellah Alioua</span>
         </h1>
-        <p className="mt-4 text-2xl md:text-3xl font-light text-[#b3b3b3] font-body animate-slide-in-right">
-          A Web Developer (Backend & WordPress)
+        
+        <p ref={taglineRef} className="text-xl md:text-2xl text-gray-300 mb-10 font-mono h-8">
+          Full Stack Developer | Creative Coder
         </p>
 
-        <div className="mt-8 animate-fade-in">
-          <a href="#projects" className="bg-[#e63946] text-white hover:bg-[#ff4d5a] px-6 py-3 rounded-full text-lg font-semibold shadow-lg transition duration-300 ease-in-out font-accent">
-            View My Work
+        <div ref={buttonRef}>
+          <a 
+            href="#projects" 
+            className="group relative inline-flex items-center justify-center px-8 py-3 text-lg font-medium text-white transition-all duration-300 bg-transparent border border-[#ff0055] rounded-full hover:bg-[#ff0055]/10 hover:shadow-[0_0_20px_rgba(255,0,85,0.4)] hover:scale-105"
+          >
+            <span className="mr-2">View My Work</span>
+            <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+            
+            {/* Button Glow Effect */}
+            <div className="absolute inset-0 rounded-full ring-2 ring-white/20 group-hover:ring-[#ff0055]/50 transition-all duration-500" />
           </a>
-          <a href="#contact" className="ml-4 border-2 border-[#e63946] text-[#e63946] hover:bg-[#ff4d5a] hover:border-[#ff4d5a] hover:text-white px-6 py-3 rounded-full text-lg font-semibold transition duration-300 ease-in-out font-accent">
-            Get in Touch
-          </a>
+        </div>
+      </div>
+      
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 border-2 border-gray-500 rounded-full flex justify-center p-1">
+          <div className="w-1 h-2 bg-[#ff0055] rounded-full animate-[scroll_1.5s_infinite]" />
         </div>
       </div>
     </section>
